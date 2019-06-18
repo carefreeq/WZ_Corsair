@@ -1,0 +1,16 @@
+{
+  "source": "Unity",
+  "applications": [
+    {
+      "app_key": "application.generated.unity.corsair.exe",
+      "launch_type": "url",
+      "url": "steam://launch/",
+      "action_manifest_path": "D:\\Project\\Corsair\\actions.json",
+      "strings": {
+        "en_us": {
+          "name": "Corsair [Testing]"
+        }
+      }
+    }
+  ]
+}
