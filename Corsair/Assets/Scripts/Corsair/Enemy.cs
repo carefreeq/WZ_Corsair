@@ -7,8 +7,9 @@ namespace Corsair
     {
         [SerializeField]
         private int score = 10;
-        protected virtual void OnDestroy()
+        protected override void Death()
         {
+            Destroy(gameObject);
             Manager.AddScore(score);
         }
     }

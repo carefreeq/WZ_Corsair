@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace Corsair
 {
-    public class Corsair : Enemy, IAttack
+    public class Corsair : Ship, IAttack
     {
         public static List<Corsair> Corsairs { get; private set; }
         static Corsair()
@@ -12,89 +12,67 @@ namespace Corsair
         }
         protected Rigidbody rig;
         [SerializeField]
-        private float speed = 10f;
-        private bool isReadly = false;
-        private float time = 0.0f;
-        [SerializeField]
-        private Cannon_auto[] cannons;
-        private int index;
-        private float launchTime;
-        protected void Awake()
+        private CorsairCannons cannons;
+        private float launchTime = 0.0f;
+        protected override void Awake()
         {
+            base.Awake();
             Corsairs.Add(this);
             rig = gameObject.GetComponent<Rigidbody>();
-            time = Time.time;
         }
-
-        private void Update()
+        private void Start()
         {
-            transform.position = new Vector3(transform.position.x, Mathf.Cos(Time.time - time), transform.position.z);
-            if (Rampart.Ramparts.Count > 0)
-            {
-                if (!isReadly)
-                {
-                    Rampart r = Rampart.Ramparts[0];
-                    float d = Vector3.Distance(r.transform.position, transform.position);
-                    if (d > 100f)
-                    {
-                        transform.Translate(transform.forward * speed * Time.deltaTime, Space.World);
-                        transform.LookAt(new Vector3(r.transform.position.x, transform.position.y, r.transform.position.z), Vector3.up);
-#if UNITY_EDITOR
-                        Debug.DrawLine(transform.position, r.transform.position, Color.green, 0.02f);
-#endif
-                    }
-                    else
-                    {
-                        StartCoroutine(ReadlyCor());
-                        isReadly = true;
-                    }
-                }
-                else
-                {
-                    if (Time.time - launchTime > 5f)
-                    {
-                        cannons[index].Launch(Rampart.Ramparts[0].GetPosition());
-                        index = (index + 1) % cannons.Length;
-                        launchTime = Time.time;
-                    }
-                }
-            }
-            else
-            {
-                transform.Translate(transform.forward * speed * Time.deltaTime, Space.World);
-            }
+            StartCoroutine(MoveCor());
         }
-        protected override void OnDestroy()
+        protected override void Death()
         {
-            base.OnDestroy();
             Corsairs.Remove(this);
+            base.Death();
         }
-        private void OnCollisionEnter(Collision collision)
+        private IEnumerator MoveCor()
         {
-            rig.AddForce(collision.impulse, ForceMode.Impulse);
-        }
-        private IEnumerator ReadlyCor()
-        {
-            Vector3 d = transform.position.x < 0 ? Vector3.left : Vector3.right;
+            Transform ta = Rampart.Ramparts[0].transform;
+
+            while (Vector3.Distance(ta.position, transform.position) > 150f)
+            {
+                transform.LookAt(new Vector3(ta.position.x, transform.position.y, ta.position.z), Vector3.up);
+#if UNITY_EDITOR
+                Debug.DrawLine(transform.position, ta.position, Color.green, 0.02f);
+#endif
+                yield return new WaitForEndOfFrame();
+            }
+            Status = ShipStatus.Attack;
+
+            Vector3 d = new Vector3(transform.position.x < 0 ? -1f : 1f, 0.0f, -Random.Range(0f, 1.0f)).normalized;
             Vector3 f = transform.forward;
-            float m = 5f;
+            float m = Random.Range(5f, 10f);
             float t = Time.time;
             while (Time.time - t < m)
             {
 #if UNITY_EDITOR
-                Debug.DrawLine(transform.position, Rampart.Ramparts[0].transform.position, Color.red, 0.02f);
+                Debug.DrawLine(transform.position, ta.position, Color.red, 0.02f);
 #endif
                 transform.Translate(transform.forward * speed * (1.0f - Mathf.Clamp01((Time.time - t) / m)) * Time.deltaTime, Space.World);
-                transform.LookAt(transform.position + Vector3.Lerp(f, d, (Time.time - t) / m / 2f));
+                transform.rotation = Quaternion.LookRotation(Vector3.RotateTowards(transform.forward, d, 0.6f * Time.deltaTime, 0.3f * Time.deltaTime));
+                //transform.LookAt(transform.position + Vector3.Lerp(f, d, (Time.time - t) / m));
                 yield return new WaitForEndOfFrame();
             }
-        }
-
-        public override void Hit(AttackInfo a)
-        {
-            if (a.Faction == AttackFaction.Player)
+            while (true)
             {
-                base.Hit(a);
+                if (Rampart.Ramparts.Count > 0)
+                {
+                    switch (Status)
+                    {
+                        case ShipStatus.Attack:
+                            if (Time.time - launchTime > 5f)
+                            {
+                                cannons.Launch(Rampart.Ramparts[0]);
+                                launchTime = Time.time;
+                            }
+                            break;
+                    }
+                }
+                yield return new WaitForEndOfFrame();
             }
         }
     }

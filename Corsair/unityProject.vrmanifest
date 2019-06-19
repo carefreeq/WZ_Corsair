@@ -5,7 +5,7 @@
       "app_key": "application.generated.unity.corsair.exe",
       "launch_type": "url",
       "url": "steam://launch/",
-      "action_manifest_path": "D:\\Project\\Corsair\\actions.json",
+      "action_manifest_path": "D:\\Project\\Github\\WZ_Corsair\\Corsair\\actions.json",
       "strings": {
         "en_us": {
           "name": "Corsair [Testing]"

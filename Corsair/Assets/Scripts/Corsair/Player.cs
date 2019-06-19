@@ -12,7 +12,6 @@ namespace Corsair
         public static List<Player> Players { get; private set; }
         public readonly static Resource<Player> Prefab = new Resource<Player>("Player");
         public static Dictionary<string, Player> OtherPlayer = new Dictionary<string, Player>();
-        public static Transform Parent { get; private set; }
         public static SteamVR_Action_Boolean TeleprotAction { get; private set; }
 
         static Player()
@@ -62,17 +61,14 @@ namespace Corsair
         private Transform head, left, right;
         [SerializeField]
         private Transform target;
-        public Cannon_manual cannon;
+        public Cannon_Manual cannon;
         private bool isActive = false;
         protected void Awake()
         {
             Players.Add(this);
 
-            if (!Parent)
-                Parent = new GameObject("Players").transform;
             if (!Main)
                 Main = this;
-            transform.SetParent(Parent.transform);
             GUID = System.Guid.NewGuid().ToString().Substring(0, 8);
 
             Body[] bs = gameObject.GetComponentsInChildren<Body>();
@@ -85,12 +81,14 @@ namespace Corsair
             {
                 if (target.gameObject.activeSelf)
                 {
-                    cannon.AimAt(target.position);
+                    if (cannon)
+                        cannon.AimAt(target.position);
                 }
             }
             if (TeleprotAction.GetStateUp(SteamVR_Input_Sources.Any))
             {
-                cannon.Launch(target.position);
+                if (cannon)
+                    cannon.Launch(target.position);
             }
         }
         private void FixedUpdate()
@@ -124,7 +122,7 @@ namespace Corsair
             n.Write(right.position);
             n.Write(right.rotation);
         }
-        protected void OnDestroy()
+        protected override void Death()
         {
             switch (Net.Status)
             {

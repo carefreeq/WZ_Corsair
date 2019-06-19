@@ -19,13 +19,12 @@ namespace Corsair
         {
             return 0.5f * ((2 * p1) + (-p0 + p2) * i + (2 * p0 - 5 * p1 + 4 * p2 - p3) * i * i + (-p0 + 3 * p1 - 3 * p2 + p3) * i * i * i);
         }
+
     }
-    public class Life : MonoBehaviour, IAttack
+    public abstract class Life : MonoBehaviour, IAttack
     {
         [SerializeField]
         protected int heart = 3;
-        [SerializeField]
-        private GameObject boom;
         [SerializeField]
         private Vector3 range;
         [SerializeField]
@@ -34,18 +33,18 @@ namespace Corsair
         {
             heart -= a.Value;
             if (heart <= 0)
-                Destroy(gameObject);
-            GameObject.Instantiate(boom, a.Position, boom.transform.rotation);
+                Death();
         }
         public Vector3 GetPosition()
         {
-            return transform.TransformPoint(new Vector3(UnityEngine.Random.Range(-range.x, range.x) / transform.localScale.x, UnityEngine.Random.Range(-range.y, range.y) / transform.localScale.y, UnityEngine.Random.Range(-range.z, range.z) / transform.localScale.z) * 0.5f + new Vector3(center.x/transform.localScale.x,center.y/transform.localScale.y,center.z/transform.localScale.z));
+            return transform.TransformPoint(new Vector3(UnityEngine.Random.Range(-range.x, range.x) / transform.localScale.x, UnityEngine.Random.Range(-range.y, range.y) / transform.localScale.y, UnityEngine.Random.Range(-range.z, range.z) / transform.localScale.z) * 0.5f + new Vector3(center.x / transform.localScale.x, center.y / transform.localScale.y, center.z / transform.localScale.z));
         }
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = new Color(1, 1, 0, 0.5f);
             Gizmos.DrawCube(center + transform.position, range);
         }
+        protected abstract void Death();
     }
 
     public class Resource<T> where T : UnityEngine.Object
