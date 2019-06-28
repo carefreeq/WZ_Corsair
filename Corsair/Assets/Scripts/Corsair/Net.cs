@@ -29,11 +29,18 @@ namespace Corsair
         Error,
         Data,
         Heartbeat,
+        GainServer,
+        SendServer,
+        Connecting,
+        ConnectPass,
     }
+
     public partial class Net
     {
+        public static string PlayerName { get; set; }
         public static IPAddress IP { get; set; }
         public static int Port { get; set; }
+        public static IPEndPoint LocalIPEndPoint { get { return new IPEndPoint(IP, Port); } }
         public static NetStatus Status { get; protected set; }
         public static int Timeout { get; set; }
         public static bool LogEnable { get; set; }
@@ -41,7 +48,8 @@ namespace Corsair
         public static event Action<NetData> NetDataEvent;
         static Net()
         {
-            Timeout = 10000;
+            PlayerName = "Player";
+            Timeout = 1000000000;
             IP = GetLocalIP();
             Port = 5000;
             LogEnable = false;
@@ -60,15 +68,30 @@ namespace Corsair
         }
         private static IPAddress GetLocalIP()
         {
-            IPAddress[] ps = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
-            foreach (IPAddress p in ps)
+            try
             {
-                if (p.AddressFamily == AddressFamily.InterNetwork)
+                IPAddress[] ps0 = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
+                foreach (IPAddress p in ps0)
                 {
-                    return p;
+                    if (p.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return p;
+                    }
+                }
+                IPAddress[] ps1 = Dns.GetHostEntry(IPAddress.Any.ToString()).AddressList;
+                foreach (IPAddress p in ps1)
+                {
+                    if (p.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return p;
+                    }
                 }
             }
-            return null;
+            catch (Exception e)
+            {
+                throw new Exception("GetLocalIP Error:" + e.Message);
+            }
+            return IPAddress.Any;
         }
         public static byte[] ObjectToByte(object obj)
         {
@@ -136,6 +159,72 @@ namespace Corsair
                                 break;
                             case NetMessageType.Data:
                                 break;
+                            case NetMessageType.GainServer:
+                                if (Net.Status == NetStatus.Server)
+                                {
+                                    NetData g = new NetData(NetMessageType.SendServer);
+                                    g.Write(NetServer.ServerName);
+                                    g.Write(NetServer.PlayerName);
+                                    g.Write(NetServer.IsPassword);
+                                    g.Write(NetServer.ClientNumber);
+                                    g.Write(NetServer.ClientMax);
+                                    NetUdp.Send(g, n.RemoteIP);
+                                }
+                                break;
+                            case NetMessageType.SendServer:
+                                string ssn = n.ReadString();
+                                string spn = n.ReadString();
+                                IPEndPoint sip = n.RemoteIP;
+                                bool spd = n.ReadBool();
+                                int scn = n.ReadInt();
+                                int scm = n.ReadInt();
+                                NetClient.Servers.Add(new NetServer.Info(ssn, spn, sip, spd, scn, scm));
+                                break;
+                            case NetMessageType.Connecting:
+                                if (Net.Status == NetStatus.Server)
+                                {
+                                    if (NetServer.ClientNumber >= NetServer.ClientMax)
+                                    {
+                                        NetData cw0 = new NetData(NetMessageType.Warning);
+                                        cw0.Write("该服务器玩家数已满!");
+                                        NetUdp.Send(cw0, n.RemoteIP);
+                                    }
+                                    string cn = n.ReadString();
+
+                                    if (NetServer.IsPassword)
+                                    {
+                                        if (!n.IsRead())
+                                        {
+                                            NetData cw1 = new NetData(NetMessageType.Warning);
+                                            cw1.Write("该服务器需要密码访问!");
+                                            NetUdp.Send(cw1, n.RemoteIP);
+                                            break;
+                                        }
+
+                                        string cp = n.ReadString();
+                                        if (NetServer.Password != cp)
+                                        {
+                                            NetData cw2 = new NetData(NetMessageType.Warning);
+                                            cw2.Write("该服务器访问密码错误!");
+                                            NetUdp.Send(cw2, n.RemoteIP);
+                                            break;
+                                        }
+                                    }
+                                    if (NetServer.Clients.ContainsIP(n.RemoteIP))
+                                    {
+                                        NetData cw3 = new NetData(NetMessageType.Warning);
+                                        cw3.Write("请勿重复登录!");
+                                        NetUdp.Send(cw3, n.RemoteIP);
+                                        break;
+                                    }
+                                    NetServer.Clients.Add(new NetClient.Info(cn, n.RemoteIP));
+                                    NetData cw = new NetData(NetMessageType.ConnectPass);
+                                    NetUdp.Send(cw, n.RemoteIP);
+                                }
+                                break;
+                            case NetMessageType.ConnectPass:
+                                NetClient.Connect(n.RemoteIP);
+                                break;
                             default:
                                 Debug.Log("未知数据包，来自:" + n.RemoteIP);
                                 break;
@@ -168,8 +257,16 @@ namespace Corsair
         {
             private byte[] data = new byte[0];
             public int DataLength { get { return (int)data.Length; } }
-            private int readLength = 0;
-            public int Readlength { get { if (readLength < 0) readLength = BitConverter.ToInt32(data, 0); return readLength; } }
+            private int readLength = -1;
+            public int Readlength
+            {
+                get
+                {
+                    if (readLength < 0)
+                        readLength = BitConverter.ToInt32(data, 0);
+                    return readLength;
+                }
+            }
             public bool IsRead
             {
                 get
@@ -317,20 +414,53 @@ namespace Corsair
             }
         }
     }
+
     public sealed partial class NetServer : NetTcp
     {
-        private static List<IPEndPoint> permit { get; set; }
+        public class Info
+        {
+            public string ServerName { get; private set; }
+            public string PlayerName { get; private set; }
+            public IPEndPoint IP { get; private set; }
+            public bool IsPassword { get; private set; }
+            public int ClientMax { get; private set; }
+            public int ClientNumber { get; private set; }
+            public Info(string sn, string pn, IPEndPoint ip, bool pd, int cn, int cm)
+            {
+                ServerName = sn;
+                PlayerName = pn;
+                IP = ip;
+                IsPassword = pd;
+                ClientNumber = cn;
+                ClientMax = cm;
+            }
+        }
+        public static string ServerName { get; set; }
+        public static string Password { get; set; }
+        public static bool IsPassword { get { return Password != null; } }
+        public static int ClientNumber { get { return Clients.Count; } }
+        public static int ClientMax { get; private set; }
+        public static List<NetClient.Info> Clients { get; set; }
+        public static event Action<NetClient.Info> AddClientEvent;
+        public static event Action<NetClient.Info> RemoveClientEvent;
         private static Dictionary<IPEndPoint, TcpInfo> clients = new Dictionary<IPEndPoint, TcpInfo>();
-        private static List<IPEndPoint> add = new List<IPEndPoint>();
-        private static List<IPEndPoint> remove = new List<IPEndPoint>();
         static NetServer()
         {
+            ServerName = "Server";
+            Clients = new List<NetClient.Info>();
             clients = new Dictionary<IPEndPoint, TcpInfo>();
+            Password = null;
+
         }
         public static void Listen(int listenNumber = 12)
         {
             if (!CheckNet())
                 return;
+            if (Status != NetStatus.Null)
+            {
+                Debug.LogError("请先退出Net状态:" + Status);
+                return;
+            }
             if (socket != null)
             {
                 Debug.LogWarning("请勿重复创建tcp服务器");
@@ -339,26 +469,33 @@ namespace Corsair
             {
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 socket.Bind(new IPEndPoint(IP, Port));
-                socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.ReuseAddress, true);
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 socket.Listen(listenNumber);
+                ClientMax = listenNumber;
                 listen = new Thread(() =>
                 {
                     while (socket != null)
                     {
                         Socket s = socket.Accept();
                         IPEndPoint ip = (IPEndPoint)s.RemoteEndPoint;
-                        if (permit == null || permit.Contains(ip))
+                        if (Clients.ContainsIP(ip))
                         {
                             if (!clients.ContainsKey(ip))
                             {
                                 TcpInfo n = new TcpInfo(s);
                                 clients.Add(ip, n);
-                                add.Add(ip);
+                                if (AddClientEvent != null)
+                                    AddClientEvent(Clients.GetClient(ip));
                                 n.Receive();
                                 n.CloseEvent += () =>
                                 {
                                     clients.Remove(ip);
-                                    remove.Add(ip);
+                                    if (Clients.ContainsIP(ip))
+                                    {
+                                        if (RemoveClientEvent != null)
+                                            RemoveClientEvent(Clients.GetClient(ip));
+                                        Clients.Remove(ip);
+                                    }
                                     Debug.Log(ip + "断开连接");
                                 };
                                 Debug.Log("新用户登入：" + ip);
@@ -372,7 +509,10 @@ namespace Corsair
                         else
                         {
                             s.Close();
-                            Debug.Log("拒绝用户：" + ip);
+                            string i = "";
+                            foreach (var c in Clients)
+                                i += c.PlayerName + " :" + c.IP + "\n";
+                            Debug.Log("拒绝用户：" + ip + "\nClients:\n" + i);
                         }
                     }
                 });
@@ -386,7 +526,61 @@ namespace Corsair
                 Debug.LogError("创建tcp服务器失败,错误：" + e.Message.ToString());
             }
         }
-        public static void Send(NetData data, IPEndPoint ip, NetType t = NetType.TCP)
+        //public static void Send(NetData data, NetType t = NetType.TCP)
+        //{
+        //    if (socket != null)
+        //    {
+        //        byte[] b = data.ToBuffer();
+        //        if (LogEnable)
+        //            Debug.Log("发送数据:" + b.Length);
+        //        {
+        //            switch (t)
+        //            {
+        //                case NetType.TCP:
+        //                    foreach (var c in clients.Values)
+        //                        c.Send(b);
+        //                    break;
+        //                case NetType.UDP:
+        //                    foreach (var c in clients)
+        //                        NetUdp.Send(b, c.Key);
+        //                    break;
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        Debug.LogError("未开启tcp服务器");
+        //    }
+        //}
+        public static void Send(NetData data, NetType t = NetType.TCP, IPEndPoint ignore = null)
+        {
+            if (socket != null)
+            {
+                byte[] b = data.ToBuffer();
+                if (LogEnable)
+                    Debug.Log("发送数据:" + b.Length);
+                {
+                    switch (t)
+                    {
+                        case NetType.TCP:
+                            foreach (var c in clients)
+                                if (ignore == null || c.Key.ToString() != ignore.ToString())
+                                    c.Value.Send(b);
+                            break;
+                        case NetType.UDP:
+                            foreach (var c in clients)
+                                if (ignore == null || c.Key.ToString() != ignore.ToString())
+                                    NetUdp.Send(b, c.Key);
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogError("未开启tcp服务器");
+            }
+        }
+        public static void SendTo(NetData data, IPEndPoint ip, NetType t = NetType.TCP)
         {
             if (clients.ContainsKey(ip))
             {
@@ -403,32 +597,6 @@ namespace Corsair
             else
             {
                 Debug.LogError(ip + "未与本机建立连接");
-            }
-        }
-        public static void Send(NetData data, NetType t = NetType.TCP)
-        {
-            if (socket != null)
-            {
-                byte[] b = data.ToBuffer();
-                if (LogEnable)
-                    Debug.Log("发送数据:" + b.Length);
-                {
-                    switch (t)
-                    {
-                        case NetType.TCP:
-                            foreach (var c in clients.Values)
-                                c.Send(b);
-                            break;
-                        case NetType.UDP:
-                            foreach (var c in clients)
-                                NetUdp.Send(b, c.Key);
-                            break;
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogError("未开启tcp服务器");
             }
         }
         public static void ShutDown()
@@ -462,11 +630,52 @@ namespace Corsair
     }
     public sealed partial class NetClient : NetTcp
     {
+        public class Info
+        {
+            public string PlayerName { get; private set; }
+            public IPEndPoint IP { get; private set; }
+            public Info(string p, IPEndPoint i)
+            {
+                PlayerName = p;
+                IP = i;
+            }
+        }
+        public static List<NetServer.Info> Servers { get; private set; }
+
+        static NetClient()
+        {
+            Servers = new List<NetServer.Info>();
+        }
+
         private static TcpInfo info;
+        public static void Flush()
+        {
+            Servers.Clear();
+            NetData n = new NetData(NetMessageType.GainServer);
+            NetUdp.SendBroad(n);
+        }
+        public static void ConnectToServer(IPEndPoint ip, string password = null)
+        {
+            if (Status != NetStatus.Null)
+            {
+                Debug.LogError("请先退出Net状态:" + Status);
+                return;
+            }
+            NetData n = new NetData(NetMessageType.Connecting);
+            n.Write(PlayerName);
+            if (password != null)
+                n.Write(password);
+            NetUdp.Send(n, ip);
+        }
         public static void Connect(IPEndPoint ip)
         {
             if (!CheckNet())
                 return;
+            if (Status != NetStatus.Null)
+            {
+                Debug.LogError("请先退出Net状态:" + Status);
+                return;
+            }
             if (info != null)
             {
                 Debug.LogWarning("请勿重复连接tcp服务器");
@@ -475,7 +684,7 @@ namespace Corsair
             {
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 socket.Bind(new IPEndPoint(IP, Port));
-                socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.ReuseAddress, true);
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 listen = new Thread(() =>
                 {
                     try
@@ -546,17 +755,23 @@ namespace Corsair
 #if XRUWP && !UNITY_EDITOR
             private DatagramSocket udp;
 #else
+            private IPEndPoint ip;
             private Socket udp;
             private Thread receive;
 #endif
-            public UdpInfo(Socket udp)
+            public UdpInfo(IPEndPoint ip)
             {
 
 #if XRUWP && !UNITY_EDITOR
                 this.udp = new DatagramSocket();
 #else
 
-                this.udp = udp;
+                this.ip = ip;
+                //this.udp = new UdpClient(ip);
+
+                this.udp = new Socket(ip.Address.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                this.udp.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                this.udp.Bind(ip);
 #endif
             }
             private const int MAX = 65500;
@@ -569,12 +784,12 @@ namespace Corsair
                 {
                     byte[] d = new byte[MAX];
                     Array.Copy(data, 0, d, 0, d.Length);
-                    udp.SendTo(d, d.Length, SocketFlags.None, ip);
+                    udp.SendTo(d, ip);
                     d = new byte[data.Length - d.Length];
                     Array.Copy(data, MAX, d, 0, d.Length);
                     data = d;
                 }
-                udp.SendTo(data, data.Length, SocketFlags.None, ip);
+                udp.SendTo(data, ip);
             }
             public void Receive()
             {
@@ -605,14 +820,15 @@ namespace Corsair
 #else
                 receive = new Thread(() =>
                 {
+                    EndPoint _ip = new IPEndPoint(IPAddress.Any, 0);
                     byte[] d = new byte[4096];
                     while (true)
                     {
                         try
                         {
-                            int l = udp.Receive(d);
+                            int l = udp.ReceiveFrom(d, ref _ip);
                             if (LogEnable)
-                                Debug.Log("收到" + udp.RemoteEndPoint + ",udp数据长度:" + d.Length);
+                                Debug.Log("收到" + _ip + ",udp数据长度:" + l);
                             if (l < d.Length)
                             {
                                 byte[] _d = new byte[l];
@@ -624,13 +840,14 @@ namespace Corsair
                             if (buffer.IsRead)
                             {
                                 NetData n = NetData.ReadBuffer(buffer.Read());
-                                n.RemoteIP = (IPEndPoint)udp.RemoteEndPoint;
+                                n.RemoteIP = (IPEndPoint)_ip;
                                 Net.NetDatas.Add(n);
                             }
                         }
                         catch (Exception e)
                         {
-                            Debug.Log("udpInfo:" + udp.RemoteEndPoint + ":" + e.Message.ToString());
+
+                            Debug.LogError("udpInfo:" + e.Message.ToString());
                         }
                     }
                 });
@@ -705,13 +922,11 @@ namespace Corsair
 #if XRUWP && !UNITY_EDITOR
                 info = new UdpInfo(Port.ToString());
 #else
-                Socket udp = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                udp.Bind(new IPEndPoint(IPAddress.Any, Port));
-                udp.SetSocketOption(SocketOptionLevel.Udp, SocketOptionName.ReuseAddress, true);
-                info = new UdpInfo(udp);
+                IPEndPoint ip = new IPEndPoint(IPAddress.Any, Port);
+                info = new UdpInfo(ip);
 #endif
                 info.Receive();
-                Debug.Log("upd服务器开启，开始监听:" + udp.LocalEndPoint);
+                Debug.Log("upd服务器开启，开始监听:" + ip);
             }
         }
 
@@ -894,7 +1109,7 @@ namespace Corsair
                 f[i] = BitConverter.ToSingle(d, i * 4);
             }
             return f;
-        } 
+        }
         public float[] ReadFloats()
         {
             byte[] d = ReadBytes();
@@ -994,6 +1209,35 @@ namespace Corsair
         public IPEndPoint ReadIPEndPoint()
         {
             return new IPEndPoint(IPAddress.Parse(ReadString()), ReadInt());
+        }
+    }
+    public static class NetClientInfoExtension
+    {
+        public static NetClient.Info GetClient(this List<NetClient.Info> infos, IPEndPoint ip)
+        {
+            foreach (var i in infos)
+            {
+                if (i.IP.ToString() == ip.ToString())
+                    return i;
+            }
+            return null;
+        }
+        public static bool ContainsIP(this List<NetClient.Info> infos, IPEndPoint ip)
+        {
+            foreach (var i in infos)
+            {
+                if (i.IP.ToString() == ip.ToString())
+                    return true;
+            }
+            return false;
+        }
+        public static void Remove(this List<NetClient.Info> infos, IPEndPoint ip)
+        {
+            for (int i = 0; i < infos.Count; i++)
+            {
+                if (infos[i].IP.ToString() == ip.ToString())
+                    infos.RemoveAt(i);
+            }
         }
     }
 }

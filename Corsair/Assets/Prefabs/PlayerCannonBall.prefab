@@ -26,7 +26,7 @@ GameObject:
   - component: {fileID: 54998232772283248}
   - component: {fileID: 114776281797883528}
   - component: {fileID: 96824658353757808}
-  m_Layer: 2
+  m_Layer: 9
   m_Name: PlayerCannonBall
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -215,7 +215,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a94b5d2d3ec0a1641b2cd81b41605cd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  time: 5
+  time: 15
   DestroyEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -234,10 +234,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   info:
     Position: {x: 0, y: 0, z: 0}
-    Direction: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 0}
     Value: 10
-  rate: 0.7
 --- !u!135 &135067793315262614
 SphereCollider:
   m_ObjectHideFlags: 1

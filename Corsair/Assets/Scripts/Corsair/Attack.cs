@@ -6,13 +6,12 @@ namespace Corsair
 {
     public interface IAttack
     {
-        void Hit(AttackInfo a);
+        void Hurt(AttackInfo a);
     }
     [Serializable]
     public struct AttackInfo
     {
         public Vector3 Position;
-        public Vector3 Direction;
         public Quaternion Rotation;
         public int Value;
     }
@@ -21,8 +20,6 @@ namespace Corsair
         public AttackInfo Info { get { return info; } }
         [SerializeField]
         private AttackInfo info;
-        [SerializeField]
-        private float rate = 0.7f;
         protected Rigidbody rig;
         protected virtual void Awake()
         {
@@ -30,32 +27,50 @@ namespace Corsair
         }
         protected void OnCollisionEnter(Collision collision)
         {
-            IAttack a = collision.gameObject.GetComponent<IAttack>();
-            if (a != null)
+            OnCollision(collision.gameObject);
+        }
+        public void OnCollision(GameObject g)
+        {
+            info.Position = transform.position;
+            info.Rotation = transform.rotation;
+            OnEnter(g);
+        }
+        protected virtual void OnEnter(GameObject g)
+        {
+            IAttack[] a = g.GetComponents<IAttack>();
+            if (a != null && a.Length > 0)
             {
-                info.Position = transform.position;
-                info.Direction = transform.forward;
-                info.Rotation = transform.rotation;
-
-                OnAttack(a);
-
-                if (collision.gameObject.tag != gameObject.tag)
+                if (g.tag != gameObject.tag)
                 {
-                    a.Hit(info);
+                    for (int i = 0; i < a.Length; i++)
+                    {
+                        a[i].Hurt(info);
+                    }
                 }
                 Destroy(gameObject);
             }
         }
-        protected abstract void OnAttack(IAttack a);
-
         public void Launch(Vector3 impulse)
         {
             rig.AddForce(impulse, ForceMode.Impulse);
         }
-        public void LaunchTo(Vector3 toPos)
+        public void LaunchTo(Vector3 pos)
         {
-            float d = Vector3.Distance(toPos, transform.position);
-            Launch(transform.forward * d * rate);
+            StartCoroutine(LaunchToCor(pos));
+        }
+        private IEnumerator LaunchToCor(Vector3 pos)
+        {
+            Vector3[] p = Tools.GetPoints(transform, pos);
+            float l = Tools.GetBezierLength(p);
+            float o = 0.0f;
+            do
+            {
+                transform.position = Tools.CatmullBezier(p, o / l);
+                yield return new WaitForEndOfFrame();
+            } while ((o += 20f * (1 + o / 80f) * Time.deltaTime) < l);
+
+            rig.AddForce(Tools.CatmullBezier(p, 1.0f) - transform.position, ForceMode.Force);
+            yield return new WaitForEndOfFrame();
         }
     }
 }

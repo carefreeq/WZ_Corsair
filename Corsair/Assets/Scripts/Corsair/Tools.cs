@@ -4,9 +4,8 @@ using UnityEngine;
 using System;
 namespace Corsair
 {
-    public class Tools : MonoBehaviour
+    public static class Tools
     {
-        public List<Vector3> poss = new List<Vector3>();
         public static Vector3 MoveLerp(float i)
         {
             return Vector3.zero;
@@ -15,38 +14,91 @@ namespace Corsair
         {
             return Vector3.zero;
         }
-        public static Vector3 CatmullRom(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float i)
+        public static Vector3 GetPosition(this Transform t, Vector3 center, Vector3 size)
         {
-            return 0.5f * ((2 * p1) + (-p0 + p2) * i + (2 * p0 - 5 * p1 + 4 * p2 - p3) * i * i + (-p0 + 3 * p1 - 3 * p2 + p3) * i * i * i);
+            size = size * 0.5f;
+            return t.TransformPoint(new Vector3(UnityEngine.Random.Range(-size.x, size.x) / t.localScale.x, UnityEngine.Random.Range(-size.y, size.y) / t.localScale.y, UnityEngine.Random.Range(-size.z, size.z) / t.localScale.z) + new Vector3(center.x / t.localScale.x, center.y / t.localScale.y, center.z / t.localScale.z));
         }
+        public static void DrawCubeGizmos(Transform t, Vector3 center, Vector3 size)
+        {
+            size = size * 0.5f;
+            Vector3 c = new Vector3(center.x / t.localScale.x, center.y / t.localScale.y, center.z / t.localScale.z);
+            Vector3[] p = new Vector3[8];
+            p[0] = t.TransformPoint(new Vector3(-size.x / t.localScale.x, -size.y / t.localScale.y, -size.z / t.localScale.z) + c);
+            p[1] = t.TransformPoint(new Vector3(size.x / t.localScale.x, -size.y / t.localScale.y, -size.z / t.localScale.z) + c);
+            p[2] = t.TransformPoint(new Vector3(size.x / t.localScale.x, size.y / t.localScale.y, -size.z / t.localScale.z) + c);
+            p[3] = t.TransformPoint(new Vector3(-size.x / t.localScale.x, size.y / t.localScale.y, -size.z / t.localScale.z) + c);
 
+            p[4] = t.TransformPoint(new Vector3(-size.x / t.localScale.x, -size.y / t.localScale.y, size.z / t.localScale.z) + c);
+            p[5] = t.TransformPoint(new Vector3(size.x / t.localScale.x, -size.y / t.localScale.y, size.z / t.localScale.z) + c);
+            p[6] = t.TransformPoint(new Vector3(size.x / t.localScale.x, size.y / t.localScale.y, size.z / t.localScale.z) + c);
+            p[7] = t.TransformPoint(new Vector3(-size.x / t.localScale.x, size.y / t.localScale.y, size.z / t.localScale.z) + c);
+
+            Gizmos.color = Color.yellow;
+            for (int i = 0; i < 4; i++)
+            {
+                Gizmos.DrawLine(p[i], p[(i + 1) % 4]);
+                Gizmos.DrawLine(p[i + 4], p[(i + 1) % 4 + 4]);
+                Gizmos.DrawLine(p[i], p[i + 4]);
+            }
+        }
+        public static float GetBezierLength(Vector3[] p)
+        {
+            float l = 0.0f;
+            Vector3 t0 = p[0];
+            Vector3 t1;
+            for (int i = 1; i < 10; i++)
+            {
+                t1 = Tools.CatmullBezier(p, i / 10f);
+                l += Vector3.Distance(t0, t1);
+                t0 = t1;
+            }
+            return l;
+        }
+        public static Vector3[] GetPoints(Transform origin, Vector3 to)
+        {
+            return new Vector3[4] { origin.position, origin.position + Vector3.Dot(to - origin.position, origin.forward) * origin.forward, to, to };
+        }
+        public static Vector3 CatmullBezier(Vector3[] p, float i)
+        {
+            if (p.Length == 4)
+            {
+                return CatmullBezier(p[0], p[1], p[2], p[3], i);
+            }
+            return Vector3.zero;
+        }
+        public static Vector3 CatmullBezier(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float i)
+        {
+            return p0 * (1f - i) * (1f - i) * (1f - i) + 3f * p1 * i * (1 - i) * (1 - i) + 3f * p2 * i * i * (1f - i) + p3 * i * i * i;
+        }
+    }
+    public interface IGetPosition
+    {
+        Vector3 GetPosition();
+    }
+    public enum AxisSingle : int
+    {
+        X, Y, Z
     }
     public abstract class Life : MonoBehaviour, IAttack
     {
+        public int Heart { get { return heart; } }
         [SerializeField]
         protected int heart = 3;
-        [SerializeField]
-        private Vector3 range;
-        [SerializeField]
-        private Vector3 center;
-        public virtual void Hit(AttackInfo a)
+        public UnityEngine.Events.UnityEvent HurtEvent, DeathEvent;
+        public virtual void Hurt(AttackInfo a)
         {
             heart -= a.Value;
             if (heart <= 0)
                 Death();
+            else
+                HurtEvent.Invoke();
         }
-        public Vector3 GetPosition()
+        public virtual void Death()
         {
-            return transform.TransformPoint(new Vector3(UnityEngine.Random.Range(-range.x, range.x) / transform.localScale.x, UnityEngine.Random.Range(-range.y, range.y) / transform.localScale.y, UnityEngine.Random.Range(-range.z, range.z) / transform.localScale.z) * 0.5f + new Vector3(center.x / transform.localScale.x, center.y / transform.localScale.y, center.z / transform.localScale.z));
+            DeathEvent.Invoke();
         }
-        private void OnDrawGizmosSelected()
-        {
-            Gizmos.color = new Color(1, 1, 0, 0.5f);
-            Gizmos.DrawCube(center + transform.position, range);
-        }
-        protected abstract void Death();
     }
-
     public class Resource<T> where T : UnityEngine.Object
     {
         private string path;

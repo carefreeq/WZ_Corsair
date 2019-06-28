@@ -3,22 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace Corsair
 {
-    public interface IAttackCannonball : IAttack
+    public interface IAttackCannonball
     {
         void OnCannonball(Attack_Cannonball ball);
     }
     public class Attack_Cannonball : Attack
     {
-        protected override void Awake()
+        protected override void OnEnter(GameObject g)
         {
-            base.Awake();
-            
-        }
-        protected override void OnAttack(IAttack a)
-        {
-            IAttackCannonball _a = a as IAttackCannonball;
-            if (_a != null)
-                _a.OnCannonball(this);
+            if (g.GetComponent<Attack_Cannonball>())
+                Physics.IgnoreCollision(GetComponent<Collider>(), g.GetComponent<Collider>());
+            else
+                base.OnEnter(g);
+
+            IAttackCannonball a = g.GetComponent<IAttackCannonball>();
+            if (a != null)
+            {
+                a.OnCannonball(this);
+                Destroy(gameObject);
+            }
         }
     }
 }

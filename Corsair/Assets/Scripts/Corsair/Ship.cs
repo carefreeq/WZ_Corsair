@@ -1,61 +1,141 @@
-﻿using System.Collections;
+﻿using Hydroform;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 namespace Corsair
 {
-    public enum ShipStatus
+    public enum ShipStatus : byte
     {
         Idle,
         Move,
         Attack,
     }
-    public class Ship : Life, IAttackCannonball, IAttackArrow
+    public class Ship : Life, IGetPosition
     {
+        public string NetID { get { return name; } }
+
+        public Vector3 center;
+        public Vector3 size;
         [SerializeField]
         protected float speed = 10f;
-        protected float time = 0.0f;
+        [SerializeField]
+        private Cannon_Auto[] cannons;
         public ShipStatus Status { get; set; }
 
-        public GameObject arrow;
-        public GameObject boom;
-        public GameObject death;
-        public void OnArrow(Attack_Arrow arrow)
-        {
-            if (this.arrow)
-            {
-                GameObject a = GameObject.Instantiate(this.arrow, arrow.Info.Position, arrow.Info.Rotation);
-                a.transform.SetParent(transform);
-            }
-        }
-
-        public void OnCannonball(Attack_Cannonball ball)
-        {
-            if (this.boom)
-            {
-                GameObject b = GameObject.Instantiate(this.boom, ball.Info.Position, ball.Info.Rotation);
-                b.transform.SetParent(transform);
-            }
-        }
-
+        public GameObject[] death;
+        private float yt = 0.0f;
+        private float lt = 0.0f;
+        private Collider col;
+        public IGetPosition target;
         protected virtual void Awake()
         {
-            time = Random.Range(0f, 3.1514926f);
+            col = GetComponent<Collider>();
+            cannons = GetComponentsInChildren<Cannon_Auto>();
+            yt = Random.Range(0f, 3.1514926f);
             Status = ShipStatus.Move;
-            StartCoroutine(UpdateCor());
         }
-        protected override void Death()
+        protected virtual void Start()
         {
-            StopAllCoroutines();
-            StartCoroutine(DeathCor());
+            Manager.NetDataManager.Add(NetID, NetDataManager);
+            switch (Net.Status)
+            {
+                case Corsair.NetStatus.Server:
+                    StartCoroutine(UpdateCor());
+                    break;
+                case Corsair.NetStatus.Client:
+                    NetClient.Send(Manager.CreateNetData(NetID, (byte)NetStatus.GetStatus));
+                    break;
+                case Corsair.NetStatus.Null:
+                    StartCoroutine(UpdateCor());
+                    break;
+            }
+        }
+        protected virtual void OnDestroy()
+        {
+            Manager.NetDataManager.Remove(NetID);
+        }
+        protected virtual void Update()
+        {
+            switch (Manager.GameStatus)
+            {
+                case GameStatus.Playing:
+                    switch (Status)
+                    {
+                        case ShipStatus.Attack:
+                            if (target != null)
+                                if (Time.time - lt > 5f)
+                                {
+                                    foreach (Cannon_Auto c in cannons)
+                                        c.AutoLaunch(target.GetPosition());
+                                    lt = Time.time;
+                                }
+                            break;
+                    }
+                    break;
+            }
+        }
+        protected void FixedUpdate()
+        {
+            switch (Net.Status)
+            {
+                case Corsair.NetStatus.Server:
+                    NetData n = Manager.CreateNetData(NetID, (byte)NetStatus.Avatar);
+                    n.Write(transform.position);
+                    n.Write(transform.rotation);
+                    NetServer.Send(n, NetType.UDP);
+                    break;
+                case Corsair.NetStatus.Client:
+                    break;
+                case Corsair.NetStatus.Null:
+                    break;
+            }
+        }
+        public override void Death()
+        {
+            switch (Net.Status)
+            {
+                case Corsair.NetStatus.Server:
+                    NetData n = Manager.CreateNetData(NetID, (byte)NetStatus.Death);
+                    NetServer.Send(n);
+
+                    StopAllCoroutines();
+                    StartCoroutine(DeathCor());
+                    base.Death();
+                    break;
+                case Corsair.NetStatus.Client:
+                    break;
+                case Corsair.NetStatus.Null:
+                    StopAllCoroutines();
+                    StartCoroutine(DeathCor());
+                    base.Death();
+                    break;
+            }
         }
         private IEnumerator UpdateCor()
         {
-            float yp = 0.0f;
-            float xe = 0.0f;
+            HydroformComponent w = null;
+            HydroformComponent[] compList = FindObjectsOfType(typeof(HydroformComponent)) as HydroformComponent[];
+            if (compList.Length > 0 && compList[0] != null)
+            {
+                w = compList[0];
+            }
+
+            float yp = transform.position.y;
+            float xe = transform.eulerAngles.x;
             while (true)
             {
-                transform.position = new Vector3(transform.position.x, yp + Mathf.Cos(Time.time - time), transform.position.z);
-                //transform.eulerAngles = new Vector3(xe + Mathf.Cos(Time.time - time)*3f, transform.eulerAngles.y, transform.eulerAngles.z);
+                if (w != null)
+                {
+                    float h0 = w.GetHeightAtPoint(transform.position);
+                    transform.position = new Vector3(transform.position.x, h0, transform.position.z);
+                    //float h1 = w.GetHeightAtPoint(transform.position+transform.forward);
+                    //transform.eulerAngles = new Vector3( Quaternion.LookRotation( h1-h0, transform.eulerAngles.y, transform.eulerAngles.z);
+                }
+                else
+                {
+                    transform.position = new Vector3(transform.position.x, yp + Mathf.Cos(Time.time - yt), transform.position.z);
+                }
+                transform.eulerAngles = new Vector3(xe + Mathf.Cos(Time.time - yt) * 4f, transform.eulerAngles.y, transform.eulerAngles.z);
                 switch (Status)
                 {
                     case ShipStatus.Move:
@@ -71,17 +151,69 @@ namespace Corsair
         {
             Destroy(gameObject.GetComponent<Rigidbody>());
             gameObject.GetComponent<Collider>().enabled = false;
-            if (death)
-                GameObject.Instantiate(death, transform.position, Quaternion.identity);
+
             float t = Time.time;
+            float s = t;
             while (Time.time - t < 12f)
             {
                 if (transform.eulerAngles.x > -60f)
                     transform.eulerAngles += new Vector3(-10f * Time.deltaTime, 0.0f, 0.0f);
                 transform.position += new Vector3(0.0f, -3.2f * Time.deltaTime, 0.0f);
+                if (death.Length > 0)
+                {
+                    if (Time.time - s > 0)
+                    {
+                        GameObject.Instantiate(death[Random.Range(0, death.Length)], transform.GetPosition(col.bounds.center, col.bounds.size), Quaternion.identity);
+                        s = Time.time + Random.Range(0f, 1f);
+                    }
+                }
                 yield return new WaitForEndOfFrame();
             }
             Destroy(gameObject);
+        }
+
+        public enum NetStatus
+        {
+            GetStatus,
+            SetStatus,
+            ShipStatus,
+            Avatar,
+            Death,
+        }
+        public void NetDataManager(NetData data)
+        {
+            switch ((NetStatus)data.ReadByte())
+            {
+                case NetStatus.GetStatus:
+                    NetData ngs = Manager.CreateNetData(NetID, (byte)NetStatus.SetStatus);
+                    ngs.Write(heart);
+                    ngs.Write((byte)Status);
+                    NetServer.SendTo(ngs, data.RemoteIP);
+                    break;
+                case NetStatus.SetStatus:
+                    heart = data.ReadInt();
+                    Status = (ShipStatus)data.ReadInt();
+                    break;
+                case NetStatus.ShipStatus:
+                    Status = (ShipStatus)data.ReadByte();
+                    break;
+                case NetStatus.Avatar:
+                    transform.position = data.ReadVector3();
+                    transform.rotation = data.ReadQuaternion();
+                    break;
+                case NetStatus.Death:
+                    Death();
+                    break;
+            }
+        }
+
+        public Vector3 GetPosition()
+        {
+            return transform.GetPosition(center, size);
+        }
+        private void OnDrawGizmosSelected()
+        {
+            Tools.DrawCubeGizmos(transform, center, size);
         }
     }
 }
