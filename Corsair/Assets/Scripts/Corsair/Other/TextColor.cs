@@ -9,12 +9,10 @@ namespace Corsair
         public Color from;
         public Color to;
         private TextMesh t;
-        private void Awake()
-        {
-            t = GetComponent<TextMesh>();
-        }
         public void SetColor(float i)
         {
+            if (!t)
+                t = GetComponent<TextMesh>();
             t.color = Color.Lerp(from, to, i);
         }
     }

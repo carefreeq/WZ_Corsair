@@ -35,8 +35,9 @@ namespace Corsair
         public Transform target;
         private int index = 0;
         public bool isLookAt;
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             animator = gameObject.GetComponent<Animator>();
             status = RoleStatus.Idle;
         }
@@ -181,7 +182,7 @@ namespace Corsair
             {
                 case 0:
                     Attack_Arrow a0 = GameObject.Instantiate(attacks.attack, point.position, point.rotation);
-                    a0.Launch((target.GetPosition(Vector3.zero, Vector3.one) - point.position).normalized * UnityEngine.Random.Range(3f, 7f));
+                    a0.Launch((target.GetPosition(Vector3.zero, Vector3.one) - point.position).normalized * UnityEngine.Random.Range(6f, 8f));
                     break;
                 case 1:
                     StartCoroutine(Attack2Cor(target));
@@ -192,7 +193,7 @@ namespace Corsair
                 case 2:
                     Attack_Arrow a2 = GameObject.Instantiate(attacks.attack, point.position, point.rotation);
                     a2.GetComponent<Rigidbody>().useGravity = false;
-                    a2.Launch((target.position - a2.transform.position).normalized * 7f);
+                    a2.Launch((target.position - a2.transform.position).normalized * 10f);
                     attacks.prelude.gameObject.SetActive(false);
                     attacks.launch.gameObject.SetActive(true);
                     attacks.launch.Play();
@@ -285,6 +286,7 @@ namespace Corsair
             StopAllCoroutines();
             base.Death();
         }
+        [ContextMenu("Death")]
         public override void Death()
         {
             switch (Net.Status)
@@ -317,10 +319,7 @@ namespace Corsair
                 case Corsair.NetStatus.Null:
                     break;
             }
-            animator.Play("Victory");
-            attacks.prelude.gameObject.SetActive(false);
-            StopAllCoroutines();
-            gameObject.GetComponent<Collider>().enabled = false;
+            PlayVictory();
         }
 
         private IEnumerator AICor()
@@ -348,6 +347,14 @@ namespace Corsair
                 }
 
             }
+        }
+
+        public void PlayVictory()
+        {
+            animator.Play("Victory");
+            attacks.prelude.gameObject.SetActive(false);
+            StopAllCoroutines();
+            gameObject.GetComponent<Collider>().enabled = false;
         }
 
         public enum NetStatus : byte

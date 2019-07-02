@@ -38,16 +38,21 @@ namespace Corsair
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            Corsairs.Remove(this);
+            if (Corsairs.Contains(this))
+                Corsairs.Remove(this);
             Manager.GameObjects.Remove(gameObject);
         }
-
+        public override void Death()
+        {
+            base.Death();
+            Corsairs.Remove(this);
+        }
         private IEnumerator MoveCor()
         {
             if (Rampart.Ramparts.Count > 0)
             {
                 Transform ta = Rampart.Ramparts[0].transform;
-                float dis = Random.Range(120f, 200f);
+                float dis = Random.Range(250f, 400f);
                 while (Vector3.Distance(ta.position, transform.position) > dis)
                 {
                     transform.LookAt(new Vector3(ta.position.x, transform.position.y, ta.position.z), Vector3.up);

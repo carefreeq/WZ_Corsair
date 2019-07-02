@@ -67,7 +67,7 @@ namespace Corsair
             {
                 transform.position = Tools.CatmullBezier(p, o / l);
                 yield return new WaitForEndOfFrame();
-            } while ((o += 20f * (1 + o / 80f) * Time.deltaTime) < l);
+            } while ((o += 40f * (1 + o / 60f) * Time.deltaTime) < l);
 
             rig.AddForce(Tools.CatmullBezier(p, 1.0f) - transform.position, ForceMode.Force);
             yield return new WaitForEndOfFrame();

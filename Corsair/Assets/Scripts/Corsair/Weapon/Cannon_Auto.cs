@@ -35,7 +35,7 @@ namespace Corsair
 #endif
                     yield return new WaitForEndOfFrame();
                 }
-                Launch((p - origin.position).normalized * Random.Range(70f, 120f));
+                Launch((p - origin.position).normalized * Random.Range(180f, 300f));
 #if UNITY_EDITOR
                 Debug.DrawRay(origin.position, p - origin.position, Color.red, 1.0f);
 #endif

@@ -863,7 +863,8 @@ namespace Valve.VR.InteractionSystem
 
 			if ( teleportPoint != null )
 			{
-				teleportPosition = teleportPoint.transform.position;
+                teleportPoint.OnClickEvent.Invoke();
+                teleportPosition = teleportPoint.transform.position;
 
 				//Teleport to a new scene
 				if ( teleportPoint.teleportType == TeleportPoint.TeleportPointType.SwitchToNewScene )

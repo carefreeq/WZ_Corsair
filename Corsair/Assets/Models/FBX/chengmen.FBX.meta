@@ -1,17 +1,38 @@
 fileFormatVersion: 2
-guid: 80fd26689fab48a46aec504574cf9ebe
+guid: d0cc3fbbbd2bb914ea2ca1a641e496e3
 ModelImporter:
   serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
+    100002: dimian
+    100004: louti
+    100006: qiang
     400000: //RootNode
-    2100000: 'Material #884'
-    2300000: //RootNode
-    3300000: //RootNode
-    4300000: "\u5BF9\u8C61002"
-    7400000: Take 001
-    9500000: //RootNode
-  externalObjects: {}
+    400002: dimian
+    400004: louti
+    400006: qiang
+    2100000: 'Material #26'
+    2100002: 'Material #33'
+    2300000: dimian
+    2300002: louti
+    2300004: qiang
+    3300000: dimian
+    3300002: louti
+    3300004: qiang
+    4300000: dimian
+    4300002: louti
+    4300004: qiang
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 'Material #26'
+    second: {fileID: 2100000, guid: cb2880a00d572d84daec405328730bcb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 'Material #33'
+    second: {fileID: 2100000, guid: 235b6e62bd245e74e981e57c49024875, type: 2}
   materials:
     importMaterials: 1
     materialName: 0
@@ -50,7 +71,7 @@ ModelImporter:
     importCameras: 1
     importLights: 1
     swapUVChannels: 0
-    generateSecondaryUV: 0
+    generateSecondaryUV: 1
     useFileUnits: 1
     optimizeMeshForGPU: 1
     keepQuads: 0
@@ -62,8 +83,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
-    previousCalculatedGlobalScale: 0.0254
-    hasPreviousCalculatedGlobalScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
@@ -88,7 +109,7 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 2
+  animationType: 0
   humanoidOversampling: 1
   additionalBone: 0
   userData: 

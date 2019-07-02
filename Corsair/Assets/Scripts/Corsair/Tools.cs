@@ -57,7 +57,11 @@ namespace Corsair
         }
         public static Vector3[] GetPoints(Transform origin, Vector3 to)
         {
-            return new Vector3[4] { origin.position, origin.position + Vector3.Dot(to - origin.position, origin.forward) * origin.forward, to, to };
+            return GetPoints(origin.position, origin.forward, to);
+        }
+        public static Vector3[] GetPoints(Vector3 form, Vector3 dir, Vector3 to)
+        {
+            return new Vector3[4] { form, form + Vector3.Dot(to - form, dir) * dir, to, to };
         }
         public static Vector3 CatmullBezier(Vector3[] p, float i)
         {
@@ -70,6 +74,14 @@ namespace Corsair
         public static Vector3 CatmullBezier(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float i)
         {
             return p0 * (1f - i) * (1f - i) * (1f - i) + 3f * p1 * i * (1 - i) * (1 - i) + 3f * p2 * i * i * (1f - i) + p3 * i * i * i;
+        }
+        public static bool IsRandom(this GameObject[] g)
+        {
+            return g.Length > 0;
+        }
+        public static GameObject GetRandom(this GameObject[] g)
+        {
+            return g[UnityEngine.Random.Range(0, g.Length)];
         }
     }
     public interface IGetPosition
@@ -85,18 +97,45 @@ namespace Corsair
         public int Heart { get { return heart; } }
         [SerializeField]
         protected int heart = 3;
-        public UnityEngine.Events.UnityEvent HurtEvent, DeathEvent;
+        private int heartMax = 3;
+        public event Action<AttackInfo> HurtStatusEvent, DeathStatusEvent;
+        public UnityEngine.UI.Scrollbar.ScrollEvent HeartPercentEvent;
+        public GameObjects[] hurtGameObjects = new GameObjects[0];
+        public UnityEngine.Events.UnityEvent HurtEvent;
+        public GameObjects[] deathGameObjects = new GameObjects[0];
+        public UnityEngine.Events.UnityEvent DeathEvent;
+        protected virtual void Awake()
+        {
+            heartMax = heart;
+            HurtStatusEvent += (a) => Create(a, hurtGameObjects);
+            DeathStatusEvent += (a) => Create(a, deathGameObjects);
+        }
         public virtual void Hurt(AttackInfo a)
         {
             heart -= a.Value;
-            if (heart <= 0)
-                Death();
-            else
+            if (heart > 0)
+            {
                 HurtEvent.Invoke();
+                if (HurtStatusEvent != null)
+                    HurtStatusEvent(a);
+            }
+            else
+                Death();
+            HeartPercentEvent.Invoke(heart / (float)heartMax);
         }
         public virtual void Death()
         {
             DeathEvent.Invoke();
+        }
+
+        private void Create(AttackInfo a, GameObjects[] go)
+        {
+            if (go != null)
+                for (int i = 0; i < go.Length; i++)
+                {
+                    if (go[i].gameObjects.IsRandom())
+                        Instantiate(go[i].gameObjects.GetRandom(), a.Position, a.Rotation);
+                }
         }
     }
     public class Resource<T> where T : UnityEngine.Object
@@ -119,6 +158,58 @@ namespace Corsair
         public static implicit operator T(Resource<T> r)
         {
             return r.target;
+        }
+    }
+    [Serializable]
+    public class GameObjects
+    {
+        public GameObject[] gameObjects = new GameObject[0];
+    }
+    public struct PointInfo
+    {
+        public Vector3[] path;
+        public Vector3 point;
+        public Vector3 nomral;
+        public Color color;
+        public RaycastHit hit;
+        public void Get(Vector3 fromPos, Vector3 fromDir, Vector3 toPos, Vector3 toDir, Color col)
+        {
+            path = Tools.GetPoints(fromPos, fromDir, toPos);
+            point = toPos;
+            nomral = toDir;
+            color = col;
+        }
+        public bool GetCast(Vector3 fromPos, Vector3 fromDir, Vector3 toPos, int layer = ~0)
+        {
+            Vector3 d = new Vector3(fromDir.x, -0.5f, fromDir.z).normalized;
+            Vector3[] p = Tools.GetPoints(fromPos, fromDir, toPos);
+
+            List<Vector3> _p = new List<Vector3>();
+
+            float l = Tools.GetBezierLength(p);
+            _p.Add(p[0]);
+            float o = 0.0f;
+            RaycastHit h;
+            while ((o += 2f) < l)
+            {
+                _p.Add(Tools.CatmullBezier(p, o / l));
+                Vector3 p0 = _p[_p.Count - 2];
+                Vector3 p1 = _p[_p.Count - 1];
+                if (Physics.Raycast(p0, (p1 - p0).normalized, out h, (p1 - p0).magnitude, layer))
+                {
+                    _p[_p.Count - 1] = h.point;
+                    nomral = h.normal;
+                    point = _p[_p.Count - 1];
+                    path = _p.ToArray();
+                    color = new Color(0f, 1f, 0f, 0.5f);
+                    return true;
+                }
+            }
+            point = _p[_p.Count - 1];
+            path = _p.ToArray();
+            nomral = Vector3.up;
+            color = new Color(1f, 0f, 0f, 0.5f);
+            return false;
         }
     }
 }

@@ -12,7 +12,7 @@
 
 		Pass
 		{
-			ZTest Always
+			//ZTest Always
 			Cull off
 			Zwrite Off
 			Blend SrcAlpha OneMinusSrcAlpha

@@ -1,41 +1,86 @@
 fileFormatVersion: 2
-guid: c35494cb1c0ee2e49ac6bd88114005d1
+guid: 6b24554371bb5084998ecbf895febe8c
 ModelImporter:
   serializedVersion: 23
   fileIDToRecycleName:
-    100000: //RootNode
-    100002: hongyidapao 1
-    100004: lunzi_l
-    100006: lunzi_r
-    100008: pao
-    100010: point
-    100012: paotai
-    400000: //RootNode
-    400002: hongyidapao 1
-    400004: lunzi_l
-    400006: lunzi_r
-    400008: pao
-    400010: point
-    400012: paotai
-    2100000: 'Material #202'
-    2300000: hongyidapao 1
-    2300002: lunzi_l
-    2300004: lunzi_r
-    2300006: pao
-    2300008: paotai
-    3300000: hongyidapao 1
-    3300002: lunzi_l
-    3300004: lunzi_r
-    3300006: pao
-    3300008: paotai
-    4300000: hongyidapao
-    4300002: lunzi_r
-    4300004: lunzi_l
-    4300006: pao
-    4300008: paotai
-    7400000: Take 001
-    9500000: //RootNode
-  externalObjects: {}
+    100000: che
+    100002: //RootNode
+    100004: lun1
+    100006: lun1_ metal
+    100008: lun2
+    100010: lun2_ metal
+    100012: lun3
+    100014: lun3_ metal
+    100016: lun4
+    100018: lun4_ metal
+    100020: metal
+    100022: pao
+    100024: point
+    400000: che
+    400002: //RootNode
+    400004: lun1
+    400006: lun1_ metal
+    400008: lun2
+    400010: lun2_ metal
+    400012: lun3
+    400014: lun3_ metal
+    400016: lun4
+    400018: lun4_ metal
+    400020: metal
+    400022: pao
+    400024: point
+    2100000: M2
+    2100002: W
+    2100004: 03 - Default
+    2300000: che
+    2300002: lun1
+    2300004: lun1_ metal
+    2300006: lun2
+    2300008: lun2_ metal
+    2300010: lun3
+    2300012: lun3_ metal
+    2300014: lun4
+    2300016: lun4_ metal
+    2300018: metal
+    2300020: pao
+    3300000: che
+    3300002: lun1
+    3300004: lun1_ metal
+    3300006: lun2
+    3300008: lun2_ metal
+    3300010: lun3
+    3300012: lun3_ metal
+    3300014: lun4
+    3300016: lun4_ metal
+    3300018: metal
+    3300020: pao
+    4300000: pao
+    4300002: che
+    4300004: lun1
+    4300006: lun1_ metal
+    4300008: lun2
+    4300010: lun2_ metal
+    4300012: lun3
+    4300014: lun4
+    4300016: lun4_ metal
+    4300018: lun3_ metal
+    4300020: metal
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 03 - Default
+    second: {fileID: 2100000, guid: 63350ec265a79af4ab3d062b9fdc0416, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: M2
+    second: {fileID: 2100000, guid: 2422810bf236d874bb4aff4e0f65d23e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: W
+    second: {fileID: 2100000, guid: 0dbd03cbbc876ee4abe834f047a71de5, type: 2}
   materials:
     importMaterials: 1
     materialName: 0
@@ -86,8 +131,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
-    previousCalculatedGlobalScale: 0.01
-    hasPreviousCalculatedGlobalScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
@@ -112,7 +157,7 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 2
+  animationType: 0
   humanoidOversampling: 1
   additionalBone: 0
   userData: 

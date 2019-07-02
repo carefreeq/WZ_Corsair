@@ -21,6 +21,7 @@ namespace Valve.VR.InteractionSystem
 			SwitchToNewScene
 		};
 
+        public UnityEngine.Events.UnityEvent OnClickEvent;
 		//Public variables
 		public TeleportPointType teleportType = TeleportPointType.MoveToLocation;
 		public string title;

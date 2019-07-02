@@ -19,7 +19,7 @@ MonoBehaviour:
   inputUpdateMode: 2
   poseUpdateMode: 8
   activateFirstActionSetOnStart: 1
-  editorAppKey: application.generated.unity.corsair.exe
+  editorAppKey: "application.generated.unity.\u68A7\u5DDE\u535A\u7269\u9986vr\u6D77\u76D7\u72D9\u51FB\u6218.exe"
   autoEnableVR: 1
   legacyMixedRealityCamera: 1
   mixedRealityCameraPose:

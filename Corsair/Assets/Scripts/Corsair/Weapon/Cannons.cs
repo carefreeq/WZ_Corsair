@@ -12,7 +12,9 @@ namespace Corsair
         public Player player;
         [SerializeField]
         private int index = 0;
+        public bool hideOther = true;
         private Cannon[] cannons;
+        private PointInfo lastPoint;
         private void Awake()
         {
             cannons = gameObject.GetComponentsInChildren<Cannon>();
@@ -29,19 +31,33 @@ namespace Corsair
 
         public void Update()
         {
-            if(player.OnTouchPadUp())
+            if (player.OnTouchPadUp())
             {
-                Select((index+1)%cannons.Length);
+                Select((index + 1) % cannons.Length);
             }
             if (player.OnTrigger())
             {
-                Player_Vive.Main.ShowHint(player.GetPoint());
-                LookAt(player.GetPoint().point);
+                PointInfo p = player.GetPoint();
+                LookAt(p.point);
+                //Cannon c = cannons[index];
+                //Vector3 d = (p.point - c.origin.position);
+                //if (Vector3.Dot(d.normalized, c.origin.forward) < 0.2f)
+                //{
+                //    Vector3 p0 = Vector3.Dot(d, Vector3.up) * Vector3.up;
+                //    Vector3 p1 = p0 + c.origin.position;
+                //    Vector3 p2 = p1 - p.point;
+                //    Vector3 p3 = p2 + p2.normalized * Mathf.Asin(0.2f);
+
+                //    p.GetCast(c.origin.position, c.origin.forward, p1);
+                //    p.color = new Color(1.0f, 0f, 0f, 0.5f);
+                //}
+                lastPoint = p;
+                Player_Vive.Main.ShowHint(lastPoint);
             }
             if (player.OnTriggerUp())
             {
                 Player_Vive.Main.CloseHint();
-                LaunchTo(player.GetPoint().point);
+                LaunchTo(lastPoint.point);
             }
 #if UNITY_EDITOR
             if (point)
@@ -51,6 +67,10 @@ namespace Corsair
 #endif
         }
 
+        public void Select(Cannon can)
+        {
+            Main = can;
+        }
         public void Select(int i, IPEndPoint ignore = null)
         {
             switch (Net.Status)
@@ -77,6 +97,7 @@ namespace Corsair
         }
         private void _Select(int i)
         {
+
             for (int _i = 0; _i < cannons.Length; _i++)
             {
                 if (_i == i)
@@ -86,7 +107,8 @@ namespace Corsair
                 }
                 else
                 {
-                    cannons[_i].gameObject.SetActive(false);
+                    if (hideOther)
+                        cannons[_i].gameObject.SetActive(false);
                 }
             }
         }

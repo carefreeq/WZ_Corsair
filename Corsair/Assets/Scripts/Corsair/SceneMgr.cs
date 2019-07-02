@@ -11,6 +11,9 @@ namespace Corsair
         public UnityEngine.Events.UnityEvent VictoryEvent, FailEvent;
         private void Start()
         {
+#if UNITY_EDITOR
+            levelId = Manager.GetCurrentLevel();
+#endif
             Manager.SetPlayerIndex(Manager.Info.ID);
 
             Manager.SetGameStatus(GameStatus.Playing);
@@ -45,6 +48,20 @@ namespace Corsair
         public void AutoNet()
         {
             Manager.AutoNet();
+        }
+        [ContextMenu("CloseNet")]
+        public void CloseNet()
+        {
+           
+           switch(Net.Status)
+            {
+                case NetStatus.Server:
+                    NetServer.ShutDown();
+                    break;
+                case NetStatus.Client:
+                    NetClient.ShutDown();
+                    break;
+            }
         }
         public void Victory()
         {

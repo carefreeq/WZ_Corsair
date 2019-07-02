@@ -12,16 +12,15 @@ namespace Corsair
         {
             Ramparts = new List<Rampart>();
         }
-
-
         public UnityEngine.UI.Scrollbar.ScrollEvent LifeEvent;
         private int max;
         [SerializeField]
         private Vector3 center;
         [SerializeField]
         private Vector3 size;
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             max = Heart;
             Ramparts.Add(this);
         }

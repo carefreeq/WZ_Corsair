@@ -14,8 +14,8 @@ namespace Valve.VR.InteractionSystem
     //-------------------------------------------------------------------------
     public class ArrowHand : MonoBehaviour
     {
-        protected Hand hand;
-        protected Longbow bow;
+        private Hand hand;
+        private Longbow bow;
 
         private GameObject currentArrow;
         public GameObject arrowPrefab;
@@ -43,15 +43,13 @@ namespace Valve.VR.InteractionSystem
 
 
         //-------------------------------------------------
-        private void Awake()
+        void Awake()
         {
             allowTeleport = GetComponent<AllowTeleportWhileAttachedToHand>();
             //allowTeleport.teleportAllowed = true;
             allowTeleport.overrideHoverLock = false;
 
             arrowList = new List<GameObject>();
-
-
         }
 
 

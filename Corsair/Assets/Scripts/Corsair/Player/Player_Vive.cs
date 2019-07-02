@@ -7,13 +7,6 @@ using Valve.VR.InteractionSystem;
 
 namespace Corsair
 {
-    public struct PointInfo
-    {
-        public Vector3[] path;
-        public Vector3 point;
-        public Vector3 nomral;
-        public Color color;
-    }
     public class Player_Vive : MonoBehaviour
     {
         public static Player_Vive Main { get; protected set; }
@@ -27,6 +20,7 @@ namespace Corsair
         public Camera Camera { get { return head; } }
         public Hand Left { get { return left; } }
         public Hand Right { get { return right; } }
+        public bool TeleprotLock, GrabPinchLock;
         [SerializeField]
         private Camera head;
         [SerializeField]
@@ -47,7 +41,7 @@ namespace Corsair
             hint.GetComponent<MeshRenderer>().material.color = info.color;
             hint.positionCount = info.path.Length;
             hint.SetPositions(info.path);
-            hint.transform.localScale = Vector3.Distance(hint.transform.position, Player_Vive.Main.Camera.transform.position) * Vector3.one * 0.1f;
+            hint.transform.localScale = Mathf.Clamp(Vector3.Distance(hint.transform.position, Player_Vive.Main.Camera.transform.position), 5f, 50f) * Vector3.one * 0.1f;
             hint.transform.position = info.path[info.path.Length - 1];
             hint.transform.rotation = Quaternion.LookRotation(info.nomral);
         }
@@ -95,26 +89,38 @@ namespace Corsair
         }
         public bool OnTrigger(SteamVR_Input_Sources input = SteamVR_Input_Sources.Any)
         {
+            if (GrabPinchLock)
+                return false;
             return GrabPinch.GetState(input);
         }
         public bool OnTriggerUp(SteamVR_Input_Sources input = SteamVR_Input_Sources.Any)
         {
+            if (GrabPinchLock)
+                return false;
             return GrabPinch.GetStateUp(input);
         }
         public bool OnTriggerDown(SteamVR_Input_Sources input = SteamVR_Input_Sources.Any)
         {
+            if (GrabPinchLock)
+                return false;
             return GrabPinch.GetStateDown(input);
         }
         public bool OnTouchPad(SteamVR_Input_Sources input = SteamVR_Input_Sources.Any)
         {
+            if (TeleprotLock)
+                return false;
             return Teleprot.GetState(input);
         }
         public bool OnTouchPadUp(SteamVR_Input_Sources input = SteamVR_Input_Sources.Any)
         {
+            if (TeleprotLock)
+                return false;
             return Teleprot.GetStateUp(input);
         }
         public bool OnTouchPadDown(SteamVR_Input_Sources input = SteamVR_Input_Sources.Any)
         {
+            if (TeleprotLock)
+                return false;
             return Teleprot.GetStateDown(input);
         }
     }

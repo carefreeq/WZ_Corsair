@@ -43,10 +43,7 @@ namespace Corsair
             Players = new List<PlayerInfo>();
             Players.Add(Info);
             Scene s = SceneManager.GetActiveScene();
-            Level = 0;
-            for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
-                if (SceneManager.GetSceneByBuildIndex(i).name == s.name)
-                    Level = i;
+            Level = GetCurrentLevel();
             GameStatus = GameStatus.Playing;
 
             NetServer.AddClientEvent += AddPlayer;
@@ -96,7 +93,7 @@ namespace Corsair
                 if (client.IP.ToString() == Players[i].IP.ToString())
                 {
                     Players.RemoveAt(i);
-                    Debug.Log("RemovePlayer:" + i );
+                    Debug.Log("RemovePlayer:" + i);
                 }
             }
         }
@@ -217,6 +214,14 @@ namespace Corsair
             NetUdp.ShutDown();
             Net.NetDataMgr.Enable = false;
         }
+        public static int GetCurrentLevel()
+        {
+            Scene s = SceneManager.GetActiveScene();
+            for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+                if (SceneManager.GetSceneByBuildIndex(i).name == s.name)
+                    return i;
+            return -1;
+        }
         public static void SetPlayerIndex(int index)
         {
             Info.ID = index;
@@ -298,14 +303,25 @@ namespace Corsair
                     break;
             }
         }
+        private static IEnumerator loadlevelEnumerator;
         private static void LoadLevel(int i)
         {
-            if (i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings)
+            if (i < SceneManager.sceneCountInBuildSettings)
             {
-                Level = i;
-                UnityEngine.SceneManagement.SceneManager.LoadScene(Level, UnityEngine.SceneManagement.LoadSceneMode.Single);
+                if (loadlevelEnumerator != null)
+                    Instance.StopCoroutine(loadlevelEnumerator);
+                loadlevelEnumerator = LoadLevelCor(i);
+                Instance.StartCoroutine(LoadLevelCor(i));
             }
         }
-
+        private static IEnumerator LoadLevelCor(int i)
+        {
+            Level = i;
+            ScreenControl.Main.ToBlack(1.0f);
+            yield return new WaitForSeconds(2.0f);
+            SceneManager.LoadScene(Level, LoadSceneMode.Single);
+            //异步后vive 会出BUG
+            //SceneManager.LoadScene(AsyncLoad.SceneName, LoadSceneMode.Single);
+        }
     }
 }

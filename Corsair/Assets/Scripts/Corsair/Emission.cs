@@ -57,7 +57,7 @@ namespace Corsair
                     index++;
                     t = Time.time;
                 }
-                Remain(1-index / (float)total);
+                Remain((total - index + Ship_Corsair.Corsairs.Count) / (float)total);
                 yield return new WaitForEndOfFrame();
             }
             Remain(0.0f);

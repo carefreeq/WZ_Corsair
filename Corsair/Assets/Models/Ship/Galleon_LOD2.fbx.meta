@@ -136,12 +136,58 @@ ModelImporter:
     4300048: sails4
     4300050: sails_close1
     9500000: //RootNode
-  externalObjects: {}
+    2186277476908879412: ImportLogs
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: S_addons
+    second: {fileID: 2100000, guid: a5c3d706799fde940bb862b842fac952, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: S_floor_01
+    second: {fileID: 2100000, guid: ed71c4b7fc3b8964a9ed133b599c7557, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: S_ropes_01
+    second: {fileID: 2100000, guid: 4f5c8d90a7ed44f4d9b7c29932e49707, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: S_sails_01
+    second: {fileID: 2100000, guid: c13af58a0d121ed46b900d55ebdff319, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: S_sails_02
+    second: {fileID: 2100000, guid: 1b9b01c32a167c244a2305a7cd9df26e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: S_wood_01
+    second: {fileID: 2100000, guid: dcd9fbf201448854a852f3389f70b849, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: S_wood_02
+    second: {fileID: 2100000, guid: f9ba68c9b2f25d84682d2bc75187977f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: S_wood_03
+    second: {fileID: 2100000, guid: bdfe816614ef44f43bea84c6314a915f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: lambert16
+    second: {fileID: 2100000, guid: 4b90bff1f70f2e0409a0a82b5a62051e, type: 2}
   materials:
     importMaterials: 1
     materialName: 0
     materialSearch: 1
-    materialLocation: 0
+    materialLocation: 1
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
@@ -192,7 +238,7 @@ ModelImporter:
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
-    tangentImportMode: 4
+    tangentImportMode: 0
     normalCalculationMode: 0
   importAnimation: 1
   copyAvatar: 0

@@ -8,15 +8,13 @@ namespace Corsair
 {
     public class Cannon : MonoBehaviour
     {
-        [SerializeField]
-        protected Part[] parts;
-        [SerializeField]
-        protected Transform origin;
-        [SerializeField]
-        protected Attack bullet;
-        protected float launchTime;
-        [SerializeField]
-        protected float fillTime;
+        public Part[] parts;
+        public Transform origin;
+        public Attack bullet;
+        public float launchTime;
+        public float fillTime;
+
+        public GameObjects[] launchGameObjects = new GameObjects[0];
         public UnityEvent LaunchEvent;
         public Scrollbar.ScrollEvent FillEvent;
 
@@ -26,6 +24,7 @@ namespace Corsair
         {
             foreach (Part p in parts)
                 p.Init();
+
         }
         public void ShowHint(Vector3 pos)
         {
@@ -50,7 +49,7 @@ namespace Corsair
             _p.Add(Tools.CatmullBezier(p, o / l));
             if (!hint.gameObject.activeSelf)
                 hint.gameObject.SetActive(true);
-            hint.startColor = hint.endColor= col;
+            hint.startColor = hint.endColor = col;
             hint.GetComponent<MeshRenderer>().material.color = col;
             hint.positionCount = _p.Count;
             hint.SetPositions(_p.ToArray());
@@ -71,11 +70,13 @@ namespace Corsair
         }
         public void Launch(Vector3 impulse)
         {
-            Launch((a) => { a.Launch(impulse); });
+            if (Vector3.Dot(impulse.normalized, origin.forward) > 0.2f)
+                Launch((a) => { a.Launch(impulse); });
         }
         public void LaunchTo(Vector3 pos)
         {
-            Launch((a) => { LookAt(pos); a.LaunchTo(pos); });
+            if (Vector3.Dot((pos - origin.position).normalized, origin.forward) > 0.2f)
+                Launch((a) => { LookAt(pos); a.LaunchTo(pos); });
         }
         private void Launch(Action<Attack> func)
         {
@@ -83,6 +84,9 @@ namespace Corsair
             {
                 launchTime = Time.time;
                 func(Instantiate(bullet, origin.position, origin.rotation));
+                for (int i = 0; i < launchGameObjects.Length; i++)
+                    if (launchGameObjects[i].gameObjects.IsRandom())
+                        GameObject.Instantiate(launchGameObjects[i].gameObjects.GetRandom(), origin.position, origin.rotation);
                 LaunchEvent.Invoke();
                 StartCoroutine(FillCor());
             }

@@ -43,8 +43,9 @@ namespace Corsair
         public Transform head;
         public Transform left;
         public Transform right;
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             Players.Add(playerId, this);
             Manager.PlayerIndexEvent += PlayerIdManager;
         }
@@ -291,7 +292,7 @@ namespace Corsair
             base.Hurt(a);
             if (isMain)
             {
-                Player_Vive.Main.Camera.GetComponent<ScreenControl>().Hurt(0.5f);
+                ScreenControl.Main.Hurt(1.0f);
             }
         }
         public void Death(IPEndPoint ignore)
@@ -338,8 +339,8 @@ namespace Corsair
                 left.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f, 0.5f);
                 right.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f, 0.5f);
             }
-            foreach (Player p in Players.Values)
-                if (p.status == PlayerStatus.Alive)
+            foreach (PlayerInfo p in Manager.Players)
+                if (Player.Players[p.ID].Heart > 0)
                     return;
             if (PlayerAllDeathEvent != null)
                 PlayerAllDeathEvent();

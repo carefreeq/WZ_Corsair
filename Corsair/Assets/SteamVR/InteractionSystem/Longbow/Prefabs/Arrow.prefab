@@ -115,8 +115,7 @@ GameObject:
   - component: {fileID: 11487904}
   - component: {fileID: 6590140}
   - component: {fileID: 5410824}
-  - component: {fileID: 114369078567087704}
-  - component: {fileID: 114638687302737646}
+  - component: {fileID: 114511632672987954}
   m_Layer: 9
   m_Name: Arrow
   m_TagString: Player
@@ -1024,12 +1023,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waveFiles:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 74068c08db651d34f81de9affa61f55d, type: 3}
+  - {fileID: 8300000, guid: 0e220b97baa73db4fab6fba879e1b024, type: 3}
+  - {fileID: 8300000, guid: adaa56b2d3d8ca548a8467326825e514, type: 3}
+  - {fileID: 8300000, guid: cef9a0102c9fe0c4fad4ebcf9ec72a45, type: 3}
+  - {fileID: 8300000, guid: beefd4b7702d5874994c17328dc55b24, type: 3}
+  - {fileID: 8300000, guid: 6e984feb46a04284e8c6ce4ebfd791d0, type: 3}
   volMin: 1
   volMax: 1
   pitchMin: 0.95
@@ -1047,15 +1046,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waveFiles:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 918ee1b51fd32d748a66d520586569ba, type: 3}
+  - {fileID: 8300000, guid: d53053a416c413d40ae35d3b3d2c8277, type: 3}
+  - {fileID: 8300000, guid: efee776e88902a74684c56ce2962678f, type: 3}
+  - {fileID: 8300000, guid: adcc31e02dc74204c80c632b9844b681, type: 3}
+  - {fileID: 8300000, guid: 526033aedfcd8fa4893bd857ca331979, type: 3}
+  - {fileID: 8300000, guid: e3148a98a2496e64cb8712177bbcde71, type: 3}
+  - {fileID: 8300000, guid: 2f800f3498cfcb94a8f6a5f8553d8aef, type: 3}
+  - {fileID: 8300000, guid: eafd8df4914b6054db2b36a3aa4b4830, type: 3}
+  - {fileID: 8300000, guid: 62bdcbc5f3d6b3f43844cc7b849f0448, type: 3}
   volMin: 0.1
   volMax: 0.3
   pitchMin: 0.98
@@ -1073,13 +1072,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waveFile:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 5dff85aa6aacb32469945a41190eadf8, type: 3}
+  - {fileID: 8300000, guid: 46bb1e3e014c28740ae8c96427da5270, type: 3}
+  - {fileID: 8300000, guid: c848d318c783da14d920cdb75f1ee7ac, type: 3}
+  - {fileID: 8300000, guid: cb0cd73b74d6f884bab13a472f547100, type: 3}
+  - {fileID: 8300000, guid: da7243059d8ed744abfe851fd03f8405, type: 3}
+  - {fileID: 8300000, guid: 9ad392a45efa3b14bbcc169371974cd7, type: 3}
+  - {fileID: 8300000, guid: 128eba63f6457ff41a65fbae1979778e, type: 3}
   stopOnPlay: 1
   disableOnEnd: 0
   looping: 0
@@ -1110,19 +1109,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waveFiles:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 4bb527c4eb5b08c44b8d24a14a6ab3ce, type: 3}
+  - {fileID: 8300000, guid: 716aaae09f0c5774a972f0bacd5e5e22, type: 3}
+  - {fileID: 8300000, guid: 63bf984cc50332446bc0517a4813d447, type: 3}
+  - {fileID: 8300000, guid: 39d2fc39182c11e4bba4ed719d778c0e, type: 3}
+  - {fileID: 8300000, guid: 652445d40bda96847993b3a366b80b34, type: 3}
+  - {fileID: 8300000, guid: f469358269d38b143b9f7bc2d6b57a29, type: 3}
+  - {fileID: 8300000, guid: 518ba9936d20b554f98e8472b29da0b5, type: 3}
+  - {fileID: 8300000, guid: a24f92749a872c94d993c87f9ad3a53e, type: 3}
+  - {fileID: 8300000, guid: 95ced3c408cd93048b111626535a8b3f, type: 3}
+  - {fileID: 8300000, guid: 07052560d042e0e4ba61076ebb2e1b94, type: 3}
+  - {fileID: 8300000, guid: c9e412f243fb49340bea515981cab351, type: 3}
+  - {fileID: 8300000, guid: 0f21ac54ede2fb1488c5719b33f0122d, type: 3}
+  - {fileID: 8300000, guid: c9b9c3bb824daba4b9cb39713cd412a6, type: 3}
   volMin: 0.1
   volMax: 0.3
   pitchMin: 0.98
@@ -5983,7 +5982,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f195fe0cc42f49241a3c7521a19fa350, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &114369078567087704
+--- !u!114 &114511632672987954
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5998,20 +5997,3 @@ MonoBehaviour:
     Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 0}
     Value: 1
---- !u!114 &114638687302737646
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 173732}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a94b5d2d3ec0a1641b2cd81b41605cd7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  time: 15
-  DestroyEvent:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null

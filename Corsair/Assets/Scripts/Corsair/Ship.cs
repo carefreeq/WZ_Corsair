@@ -1,6 +1,7 @@
 ﻿using Hydroform;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 namespace Corsair
 {
@@ -9,6 +10,7 @@ namespace Corsair
         Idle,
         Move,
         Attack,
+        Death,
     }
     public class Ship : Life, IGetPosition
     {
@@ -27,8 +29,9 @@ namespace Corsair
         private float lt = 0.0f;
         private Collider col;
         public IGetPosition target;
-        protected virtual void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             col = GetComponent<Collider>();
             cannons = GetComponentsInChildren<Cannon_Auto>();
             yt = Random.Range(0f, 3.1514926f);
@@ -90,26 +93,29 @@ namespace Corsair
                     break;
             }
         }
-        public override void Death()
+        public void Death(IPEndPoint ignore)
         {
             switch (Net.Status)
             {
                 case Corsair.NetStatus.Server:
-                    NetData n = Manager.CreateNetData(NetID, (byte)NetStatus.Death);
-                    NetServer.Send(n);
-
-                    StopAllCoroutines();
-                    StartCoroutine(DeathCor());
-                    base.Death();
+                    NetData ns = Manager.CreateNetData(NetID, (byte)NetStatus.Death);
+                    NetServer.Send(ns, NetType.TCP, ignore);
                     break;
                 case Corsair.NetStatus.Client:
+                    NetData nc = Manager.CreateNetData(NetID, (byte)NetStatus.Death);
+                    NetClient.Send(nc);
                     break;
                 case Corsair.NetStatus.Null:
-                    StopAllCoroutines();
-                    StartCoroutine(DeathCor());
-                    base.Death();
                     break;
             }
+            Death();
+        }
+        public override void Death()
+        {
+            StopAllCoroutines();
+            StartCoroutine(DeathCor());
+            Status = ShipStatus.Death;
+            base.Death();
         }
         private IEnumerator UpdateCor()
         {
@@ -163,7 +169,7 @@ namespace Corsair
                 {
                     if (Time.time - s > 0)
                     {
-                        GameObject.Instantiate(death[Random.Range(0, death.Length)], transform.GetPosition(col.bounds.center, col.bounds.size), Quaternion.identity);
+                        GameObject.Instantiate(death[Random.Range(0, death.Length)], transform.GetPosition(center, size), Quaternion.identity);
                         s = Time.time + Random.Range(0f, 1f);
                     }
                 }
@@ -202,7 +208,7 @@ namespace Corsair
                     transform.rotation = data.ReadQuaternion();
                     break;
                 case NetStatus.Death:
-                    Death();
+                    Death(data.RemoteIP);
                     break;
             }
         }
